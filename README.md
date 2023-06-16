@@ -1,1 +1,2 @@
-# final_tests
+# Репозиторий для финальной части курса "Автоматизация тестирования с помощью Selenium и Python" (https://stepik.org/course/575)
+
