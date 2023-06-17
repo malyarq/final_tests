@@ -1,23 +1,14 @@
 from .pages.product_page import ProductPage
 from .pages.basket_page import BasketPage
+from .pages.login_page import LoginPage
 import pytest
+import time
 
 @pytest.mark.login
 class TestLoginFromProductPage():
     @pytest.fixture(scope="function", autouse=True)
     def setup(self):
-
-        # self.product = ProductFactory(title = "Best book created by robot")
-        # создаем по апи
-        # self.link = self.product.link
-
         self.link = "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/"
-
-        yield
-        # после этого ключевого слова начинается teardown
-        # выполнится после каждого теста в классе
-        # удаляем те данные, которые мы создали 
-        self.product.delete()
 
     def test_guest_should_see_login_link_on_product_page(self, browser):
         page = ProductPage(browser, self.link)
@@ -64,17 +55,39 @@ class TestCantSeeSuccessMessage():
         page = ProductPage(browser, link)
         page.open()
         page.add_product_to_basket()
-        page.should_not_be_success_message_1()
+        page.should_not_be_success_message_is_not_element_present()
 
     def test_guest_cant_see_success_message(self, browser):
         link = "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/"
         page = ProductPage(browser, link)
         page.open()
-        page.should_not_be_success_message_2()
+        page.should_not_be_success_message_is_not_element_present()
 
     def test_message_disappeared_after_adding_product_to_basket(self, browser):
         link = "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/"
         page = ProductPage(browser, link)
         page.open()
         page.add_product_to_basket()
-        page.should_not_be_success_message_3()
+        page.should_not_be_success_message_is_disappeared()
+
+@pytest.mark.user
+class TestUserAddToBasketFromProductPage():
+    @pytest.fixture(scope="function", autouse=True)
+    def setup(self, browser):
+        email = str(time.time()) + "@fakemail.org"
+        password = str(time.time())
+        self.link = "http://selenium1py.pythonanywhere.com/catalogue/coders-at-work_207/"
+        self.page = ProductPage(browser, self.link)
+        self.page.open()
+        self.page.go_to_login_page()
+        login_page = LoginPage(browser, browser.current_url)
+        login_page.register_new_user(email, password)
+        self.page.open()
+        self.page.should_be_authorized_user()
+    
+    def test_user_cant_see_success_message(self, browser):
+        self.page.should_not_be_success_message_is_not_element_present()
+
+    def test_user_can_add_product_to_basket(self, browser):
+        self.page.add_product_to_basket()
+        self.page.should_be_alert()
